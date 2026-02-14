@@ -21,16 +21,19 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pyinstaller pygame pillow
+        # Устанавливаем всё из файла и принудительно PyInstaller
         if (Test-Path requirements.txt) { pip install -r requirements.txt }
+        pip install pyinstaller pygame pillow
 
     - name: Build EXE with PyInstaller
       run: |
-        # --add-data "images;images" копирует папку images внутрь exe для Windows
+        # Используем "python -m PyInstaller" - это решает твою ошибку
+        # Флаг --add-data "images;images" обязателен, чтобы папка с картинками попала внутрь EXE
+        # ВАЖНО: На Windows используется точка с запятой (;) как разделитель
         python -m PyInstaller --onefile --windowed --add-data "images;images" main.py
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: windows-app-exe
+        name: SubotaRPG-EXE
         path: dist/*.exe
