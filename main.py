@@ -11,6 +11,13 @@ ZONES = [HEAD, TORSO, LEGS]
 
 # --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ИНТЕРФЕЙСА ---
 
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 def draw_status_box(screen, text, font, center_x, y, padding=15):
     if not text: return
     text_surf = font.render(text, True, (255, 255, 255))
