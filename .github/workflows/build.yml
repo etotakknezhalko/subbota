@@ -2,34 +2,39 @@ name: Build Windows EXE
 
 on:
   push:
-    branches: [ main ]  # Сборка будет запускаться при каждом пуше в ветку main
-  workflow_dispatch:      # Позволяет запускать сборку вручную через вкладку Actions
+    branches: [ main ]  # Сборка запускается при пуше в ветку main
+  workflow_dispatch:      # Позволяет запустить сборку вручную кнопкой на GitHub
 
 jobs:
   build:
-    runs-on: windows-latest  # Используем виртуальную машину с Windows
+    runs-on: windows-latest  # Используем виртуальную машину Windows
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.10' # Укажите вашу версию Python
+        python-version: '3.10' # Укажите вашу версию Python, если нужно
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        # Устанавливаем библиотеки из файла (если он есть)
+        if (Test-Path requirements.txt) { pip install -r requirements.txt }
+        # Гарантируем установку инструментов сборки и ваших библиотек (из скриншота)
+        pip install pyinstaller pygame pillow
 
     - name: Build EXE with PyInstaller
       run: |
-        pyinstaller --onefile --windowed main.py
-      # Замените main.py на название вашего главного файла
+        python -m PyInstaller --onefile --windowed main.py
+      # ВАЖНО: Если ваш главный файл называется НЕ main.py, замените его выше.
+      # --onefile: всё в один exe
+      # --windowed: чтобы не открывалась консоль (для игр на Pygame это обычно нужно)
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: windows-executable
-        path: dist/*.exe
+        name: windows-app-exe  # Название архива, который вы скачаете
+        path: dist/*.exe       # Путь к готовому файлу
