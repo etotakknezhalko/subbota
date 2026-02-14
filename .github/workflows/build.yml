@@ -26,7 +26,8 @@ jobs:
 
     - name: Build EXE with PyInstaller
       run: |
-        # Мы добавляем --add-data "images;images", чтобы папка с картинками попала в EXE
+        # Используем python -m PyInstaller и добавляем папку с картинками
+        # "images;images" означает: взять папку images и положить её в корень внутри EXE
         python -m PyInstaller --onefile --windowed --add-data "images;images" main.py
 
     - name: Upload Artifact

@@ -1,5 +1,6 @@
 import pygame
 import random
+import sys
 import os
 from PIL import Image
 
@@ -12,7 +13,9 @@ ZONES = [HEAD, TORSO, LEGS]
 # --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ИНТЕРФЕЙСА ---
 
 def resource_path(relative_path):
+    """ Получает абсолютный путь к ресурсам (нужно для PyInstaller) """
     try:
+        # PyInstaller создает временную папку _MEIPASS
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
