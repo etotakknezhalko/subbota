@@ -21,13 +21,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        if (Test-Path requirements.txt) { pip install -r requirements.txt }
         pip install pyinstaller pygame pillow
+        if (Test-Path requirements.txt) { pip install -r requirements.txt }
 
     - name: Build EXE with PyInstaller
       run: |
-        # Используем python -m PyInstaller и добавляем папку с картинками
-        # "images;images" означает: взять папку images и положить её в корень внутри EXE
+        # --add-data "images;images" копирует папку images внутрь exe для Windows
         python -m PyInstaller --onefile --windowed --add-data "images;images" main.py
 
     - name: Upload Artifact

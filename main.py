@@ -15,7 +15,7 @@ ZONES = [HEAD, TORSO, LEGS]
 def resource_path(relative_path):
     """ Получает абсолютный путь к ресурсам (нужно для PyInstaller) """
     try:
-        # PyInstaller создает временную папку _MEIPASS
+        # PyInstaller создает временную папку _MEIPASS при запуске .exe
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
@@ -41,14 +41,17 @@ class Weapon:
         self.bonus_crit_chance = bonus_crit_chance; self.bonus_сrit_damage = bonus_сrit_damage
 
 class Player:
-    def __init__(self, name, hp, damage, armor, crit_chance, сrit_damage, weapon, side, static_img, attack_gif):
+    def __init__(self, name, hp, damage, armor, crit_chance, сrit_damage, weapon, side, static_img_path, attack_gif_path):
         self.name = name; self.max_hp = hp; self.hp = hp
         self.damage = damage + weapon.bonus_damage; self.armor = armor
         self.crit_chance = crit_chance + weapon.bonus_crit_chance
         self.сrit_damage = сrit_damage + weapon.bonus_сrit_damage
         self.side = side
-        self.static_image_orig = pygame.image.load(static_img).convert_alpha()
-        self.attack_frames_orig = self._load_gif_frames(attack_gif)
+        
+        # Используем переданные пути (уже обернутые в resource_path)
+        self.static_image_orig = pygame.image.load(static_img_path).convert_alpha()
+        self.attack_frames_orig = self._load_gif_frames(attack_gif_path)
+        
         self.state = "IDLE"; self.current_frame = 0; self.animation_speed = 0.17
         self.image = None; self.rect = None; self.current_choice = None 
         self.reset_stats()
@@ -57,7 +60,7 @@ class Player:
         self.hp = self.max_hp
         self.total_damage_dealt = 0
         self.crit_count = 0
-        self.current_choice = None # Сброс выбора при старте
+        self.current_choice = None
         self.hits_by_zone = {HEAD: 0, TORSO: 0, LEGS: 0}
         self.blocks_by_zone = {HEAD: 0, TORSO: 0, LEGS: 0}
 
@@ -160,8 +163,9 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREE
 pygame.display.set_caption("Subota RPG")
 clock = pygame.time.Clock()
 
-p1 = Player("Игрок 1", 100, 15, 3, 0.3, 2.0, Weapon("Меч", 5, 0.1, 1.0), 'left', "images/p1_static.png", "images/p1_attack.gif")
-p2 = Player("Игрок 2", 100, 10, 5, 0.35, 1.9, Weapon("Нож", 3, 0.3, 0.8), 'right', "images/p2_static.png", "images/p2_attack.gif")
+# ПУТИ К КАРТИНКАМ ИГРОКОВ (ОБЕРНУТЫ В resource_path)
+p1 = Player("Игрок 1", 100, 15, 3, 0.3, 2.0, Weapon("Меч", 5, 0.1, 1.0), 'left', resource_path("images/p1_static.png"), resource_path("images/p1_attack.gif"))
+p2 = Player("Игрок 2", 100, 10, 5, 0.35, 1.9, Weapon("Нож", 3, 0.3, 0.8), 'right', resource_path("images/p2_static.png"), resource_path("images/p2_attack.gif"))
 
 background = None; splash_bg = None; font_ui = None; font_btn = None; ui_bg = None
 img_attack = None; img_protect = None; img_ng_btn = None; img_back_btn = None
@@ -174,28 +178,32 @@ ng_offset_y = 0; back_offset_y = 0
 
 def update_res():
     global background, splash_bg, font_ui, font_btn, p1_buttons, p2_buttons, ui_bg, img_attack, img_protect, img_ng_btn, img_back_btn, ng_btn_rect, back_btn_rect, SCREEN_WIDTH, SCREEN_HEIGHT
-    bg_orig = pygame.image.load("images/back.png").convert()
+    
+    # ВСЕ ПУТИ ОБЕРНУТЫ В resource_path
+    bg_orig = pygame.image.load(resource_path("images/back.png")).convert()
     background = pygame.transform.scale(bg_orig, (SCREEN_WIDTH, SCREEN_HEIGHT))
-    splash_orig = pygame.image.load("images/splash.png").convert()
+    splash_orig = pygame.image.load(resource_path("images/splash.png")).convert()
     splash_bg = pygame.transform.scale(splash_orig, (SCREEN_WIDTH, SCREEN_HEIGHT))
     
-    ng_orig = pygame.image.load("images/ng_buttom.png").convert_alpha()
+    ng_orig = pygame.image.load(resource_path("images/ng_buttom.png")).convert_alpha()
     btn_w = int(SCREEN_WIDTH * 0.25)
     btn_h = int(btn_w * (ng_orig.get_height() / ng_orig.get_width()))
     img_ng_btn = pygame.transform.smoothscale(ng_orig, (btn_w, btn_h))
     ng_btn_rect = img_ng_btn.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 40))
     
-    back_orig = pygame.image.load("images/back_to_menu.png").convert_alpha()
+    back_orig = pygame.image.load(resource_path("images/back_to_menu.png")).convert_alpha()
     back_w = int(SCREEN_WIDTH * 0.18)
     back_h = int(back_w * (back_orig.get_height() / back_orig.get_width()))
     img_back_btn = pygame.transform.smoothscale(back_orig, (back_w, back_h))
     back_btn_rect = img_back_btn.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT * 0.88))
     
-    ui_slab_orig = pygame.image.load("images/hp_name_texture.png").convert_alpha()
+    ui_slab_orig = pygame.image.load(resource_path("images/hp_name_texture.png")).convert_alpha()
     slab_w, slab_h = int(SCREEN_WIDTH * 0.32), int(int(SCREEN_WIDTH * 0.32) * (ui_slab_orig.get_height() / ui_slab_orig.get_width()))
     ui_bg = pygame.transform.smoothscale(ui_slab_orig, (slab_w, slab_h))
-    img_attack = pygame.transform.smoothscale(pygame.image.load("images/attack_state.png").convert_alpha(), (int(slab_h * 0.7), int(slab_h * 0.7)))
-    img_protect = pygame.transform.smoothscale(pygame.image.load("images/protect_status.png").convert_alpha(), (int(slab_h * 0.7), int(slab_h * 0.7)))
+    
+    img_attack = pygame.transform.smoothscale(pygame.image.load(resource_path("images/attack_state.png")).convert_alpha(), (int(slab_h * 0.7), int(slab_h * 0.7)))
+    img_protect = pygame.transform.smoothscale(pygame.image.load(resource_path("images/protect_status.png")).convert_alpha(), (int(slab_h * 0.7), int(slab_h * 0.7)))
+    
     font_ui, font_btn = pygame.font.SysFont("Arial", int(SCREEN_HEIGHT * 0.035), bold=True), pygame.font.SysFont("Arial", int(SCREEN_HEIGHT * 0.025), bold=True)
     p1.resize(SCREEN_WIDTH, SCREEN_HEIGHT); p2.resize(SCREEN_WIDTH, SCREEN_HEIGHT)
     b_w, b_h, side, start = int(SCREEN_WIDTH * 0.18), int(SCREEN_HEIGHT * 0.06), int(SCREEN_WIDTH * 0.08), int(SCREEN_HEIGHT * 0.40)
@@ -249,7 +257,6 @@ while running:
         
         if event.type == pygame.MOUSEBUTTONDOWN:
             if game_state == "MENU":
-                # Учитываем смещение анимации для точного клика
                 click_rect = ng_btn_rect.move(0, ng_offset_y)
                 if click_rect.collidepoint(event.pos): 
                     p1.reset_stats(); p2.reset_stats(); combat_log = "БИТВА НАЧИНАЕТСЯ!"; game_state = "GAME"
@@ -269,7 +276,7 @@ while running:
 
     if game_state == "MENU":
         screen.blit(splash_bg, (0, 0))
-        target_offset = -10 if ng_btn_rect.collidepoint(mouse_pos) else 0 # Сократили до 10px
+        target_offset = -10 if ng_btn_rect.collidepoint(mouse_pos) else 0
         ng_offset_y += (target_offset - ng_offset_y) * 0.15
         screen.blit(img_ng_btn, (ng_btn_rect.x, ng_btn_rect.y + ng_offset_y))
         
